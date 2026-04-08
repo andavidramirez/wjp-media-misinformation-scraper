@@ -1,0 +1,55 @@
+# ── Entornos virtuales ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Caché de Python ─────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Datos crudos (se regeneran ejecutando el pipeline) ──────────────────────
+data/
+
+# ── Distribuciones y builds ─────────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+*.egg
+
+# ── IDEs y editores ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ── Jupyter (no se usa en este proyecto, pero por precaución) ───────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Herramientas de cobertura y análisis estático ───────────────────────────
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ── Variables de entorno ─────────────────────────────────────────────────────
+.env
+.env.*
+
+# ── macOS ────────────────────────────────────────────────────────────────────
+.DS_Store
+
+# ── Windows ──────────────────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Resultados del Scraper ──────────────────────────────────────────────────
+# Ignoramos todo en output por defecto para no subir basura
+output/*
+# Pero permitimos específicamente el reporte final
+!output/Misinformation_Report_LaSillaVacia.pdf
