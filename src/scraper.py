@@ -46,8 +46,12 @@ class DetectorMentirasScraper:
         "Upgrade-Insecure-Requests": "1",
     }
 
-    # Maximum number of articles to collect per run
-    MAX_ARTICLES = 30
+    # Maximum number of articles to collect per run.
+    # Override via max_articles parameter in __init__.
+    _DEFAULT_MAX_ARTICLES = 30
+
+    # Default look-back window (calendar months from start_date).
+    _DEFAULT_MONTHS_BACK = 3
 
     # Delay between requests (seconds) to avoid overloading the server.
     # Stochastic range [3, 5] prevents deterministic request fingerprinting
@@ -65,13 +69,28 @@ class DetectorMentirasScraper:
         "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12,
     }
 
-    def __init__(self, data_dir: str):
+    def __init__(
+        self,
+        data_dir: str,
+        start_date: datetime | None = None,
+        months_back: int = 3,
+        max_articles: int = 30,
+    ):
         """
         Parameters
         ----------
         data_dir : str
             Path to the folder where the raw CSV will be saved.
             Passed from main.py to preserve relative paths.
+        start_date : datetime | None
+            Reference date for the search window (searches backwards from here).
+            Defaults to today if None.
+        months_back : int
+            Number of full calendar months to look back from start_date.
+            Default: 3.
+        max_articles : int
+            Stop collecting once this many qualifying articles are found.
+            Default: 30.
         """
         self.data_dir = data_dir
         os.makedirs(self.data_dir, exist_ok=True)
@@ -79,9 +98,12 @@ class DetectorMentirasScraper:
         # Create a cloudscraper client to bypass anti-bot protections
         self.scraper = cloudscraper.create_scraper()
 
-        # Date range: from today back exactly 3 calendar months
-        self.current_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        self.limit_date = self.current_date - relativedelta(months=3)
+        # Search window derived from the injected parameters
+        self.max_articles = max_articles
+        self.current_date = (
+            start_date if start_date is not None else datetime.now()
+        ).replace(hour=0, minute=0, second=0, microsecond=0)
+        self.limit_date = self.current_date - relativedelta(months=months_back)
 
     # ──────────────────────────────────────────────────────────────────────────
     # Métodos privados (helpers)
@@ -214,7 +236,7 @@ class DetectorMentirasScraper:
 
     def get_article_urls(self) -> list[dict]:
         """Paginates through the Misinformation Detector listing from newest to oldest,
-        collecting up to MAX_ARTICLES articles labeled FALSO or ENGÁÑOSO
+        collecting up to max_articles articles labeled FALSO or ENGÁÑOSO
         published within the 3-month date range.
 
         Returns
@@ -228,9 +250,9 @@ class DetectorMentirasScraper:
         keep_scraping = True
 
         print(f"📅 Date range: {self.limit_date.strftime('%Y-%m-%d')} → {self.current_date.strftime('%Y-%m-%d')}")
-        print(f"🎯 Target: {self.MAX_ARTICLES} articles\n")
+        print(f"🎯 Target: {self.max_articles} articles\n")
 
-        while keep_scraping and len(articles_data) < self.MAX_ARTICLES:
+        while keep_scraping and len(articles_data) < self.max_articles:
             url = self.BASE_URL if page == 1 else f"{self.BASE_URL}page/{page}/"
             print(f"📄 Crawling page {page}: {url}")
 
@@ -250,7 +272,7 @@ class DetectorMentirasScraper:
                 print(f"  → {len(cards)} article cards found.")
 
                 for card in cards:
-                    if len(articles_data) >= self.MAX_ARTICLES:
+                    if len(articles_data) >= self.max_articles:
                         keep_scraping = False
                         break
 
@@ -280,7 +302,7 @@ class DetectorMentirasScraper:
                             "verdict_list": label,
                             "date": pub_date.strftime("%Y-%m-%d") if pub_date else "Unknown",
                         })
-                        print(f"  ✅ ({len(articles_data)}/{self.MAX_ARTICLES}) [{label}] {article_url}")
+                        print(f"  ✅ ({len(articles_data)}/{self.max_articles}) [{label}] {article_url}")
 
             except Exception as exc:
                 print(f"  ❌ Unexpected error on page {page}: {exc}")

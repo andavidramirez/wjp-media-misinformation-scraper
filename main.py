@@ -25,6 +25,19 @@ PHASES_TO_RUN = {
     "cleanup": True,
 }
 
+# ─── Search configuration — adjust before each run ───────────────────────────
+# START_DATE   : reference point for the search (searches backwards from this date).
+# MONTHS_BACK  : how many full calendar months to look back from START_DATE.
+# MAX_ARTICLES : stop collecting once this many FALSO/ENGAÑOSO articles are found.
+#                The scraper will stop on whichever condition is met first.
+from datetime import datetime
+
+SEARCH_CONFIG = {
+    "start_date":   datetime(2026, 4, 7),  # e.g. datetime(2025, 12, 31)
+    "months_back":  3,                      # e.g. 6 for a half-year window
+    "max_articles": 30,                     # e.g. 50 for a larger sample
+}
+
 import os
 import glob
 import sys
@@ -107,7 +120,12 @@ def run_pipeline() -> None:
         # ── PHASE 1: Scraping ──────────────────────────────────────────────────────────
     if PHASES_TO_RUN["scraping"]:
         print("\n📡 PHASE 1 — Scraping\n")
-        scraper = DetectorMentirasScraper(data_dir=DATA_DIR)
+        scraper = DetectorMentirasScraper(
+            data_dir=DATA_DIR,
+            start_date=SEARCH_CONFIG["start_date"],
+            months_back=SEARCH_CONFIG["months_back"],
+            max_articles=SEARCH_CONFIG["max_articles"],
+        )
 
         # Collect article URLs from the listing page
         urls = scraper.get_article_urls()

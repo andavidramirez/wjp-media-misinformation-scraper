@@ -140,6 +140,6 @@ main.py
 
 ## Ethical Behavior
 
-- The pipeline enforces a **4-second delay** between each HTTP request.
+- The pipeline enforces a **3 to 5 second delay** between each HTTP request.
 - Upon completion, it **automatically deletes** the CSV file containing raw scraped data.
 - No personal data from article authors or site users is stored.
